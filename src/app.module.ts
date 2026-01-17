@@ -4,6 +4,8 @@ import { AppService } from './app.service';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { HealthController } from './health/health.controller';
+import { TerminusModule } from '@nestjs/terminus';
 
 @Module({
   imports: [
@@ -21,8 +23,11 @@ import { TypeOrmModule } from '@nestjs/typeorm';
     ThrottlerModule.forRoot([{
       ttl: 60000,
       limit: 10,
-    }]),],
-  controllers: [AppController],
+    }]),
+    TerminusModule,
+  ],
+
+  controllers: [AppController, HealthController],
   providers: [AppService,
 {
       provide: APP_GUARD,
