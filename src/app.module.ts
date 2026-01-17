@@ -9,9 +9,9 @@ import { TerminusModule } from '@nestjs/terminus';
 
 @Module({
   imports: [
-    // 10 requests per minute 
+    // 10 requests per minute
     TypeOrmModule.forRoot({
-      type: 'mysql', 
+      type: 'mysql',
       host: process.env.DB_HOST || 'localhost',
       port: parseInt(process.env.DB_PORT || '3306', 10),
       username: process.env.DB_USER || 'root',
@@ -20,20 +20,22 @@ import { TerminusModule } from '@nestjs/terminus';
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: true,
     }),
-    ThrottlerModule.forRoot([{
-      ttl: 60000,
-      limit: 10,
-    }]),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 10,
+      },
+    ]),
     TerminusModule,
   ],
 
   controllers: [AppController, HealthController],
-  providers: [AppService,
-{
+  providers: [
+    AppService,
+    {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
     },
-
   ],
 })
 export class AppModule {}
