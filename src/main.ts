@@ -6,6 +6,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { WINSTON_MODULE_NEST_PROVIDER, WinstonModule } from 'nest-winston';
 import * as winston from 'winston';
 import { utilities as nestWinstonModuleUtilities } from 'nest-winston';
+import { ConfigService } from '@nestjs/config/dist/config.service';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     logger: WinstonModule.createLogger({
@@ -33,6 +34,7 @@ async function bootstrap() {
       ],
     }),
   });
+  const configService = app.get(ConfigService);
   app.use(helmet());
   app.enableCors({
     origin: '*',

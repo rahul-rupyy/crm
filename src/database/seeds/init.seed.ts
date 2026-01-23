@@ -1,12 +1,15 @@
+import { ConfigService } from '@nestjs/config';
 import { DataSource } from 'typeorm';
+
+const configService = new ConfigService();
 
 const AppDataSource = new DataSource({
   type: 'mysql',
-  host: process.env.DB_HOST || 'localhost',
-  port: 3306,
-  username: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || 'password',
-  database: process.env.DB_NAME || 'boilerplate_db',
+  host: configService.get<string>('DATABASE_HOST'),
+  port: configService.get<number>('DATABASE_PORT'),
+  username: configService.get<string>('DATABASE_USER'),
+  password: configService.get<string>('DATABASE_PASSWORD'),
+  database: configService.get<string>('DATABASE_NAME'),
   entities: [],
 });
 
