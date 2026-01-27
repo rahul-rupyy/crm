@@ -1,0 +1,8 @@
+{
+  "extension": ["ts"],
+  "spec": ["src/**/*.spec.ts", "test/**/*.spec.ts"],
+  "require": ["ts-node/register", "tsconfig-paths/register"],
+  "exit": true,
+  "timeout": 5000,
+  "recursive": true
+}
