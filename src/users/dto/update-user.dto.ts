@@ -11,7 +11,6 @@ export class UpdateUserDto {
   @IsEnum(Role)
   role?: Role;
 
-  // Allow password change via a separate endpoint ideally; kept here for simplicity
   @IsOptional()
   @IsString()
   @MinLength(6)
