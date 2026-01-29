@@ -46,7 +46,7 @@ export class AuthService {
     password: string,
     secretKey?: string,
   ): Promise<AuthTokenResponse> {
-    const created = await this.usersService.create({ name, email, password });
+    // Determine role based on provided secret and env value
     let role = Role.User;
     if (
       secretKey &&
@@ -54,6 +54,13 @@ export class AuthService {
     ) {
       role = Role.Admin;
     }
+    // Persist user with resolved role
+    const created = await this.usersService.create({
+      name,
+      email,
+      password,
+      role,
+    });
     const payload = {
       sub: created._id,
       email: created.email,
