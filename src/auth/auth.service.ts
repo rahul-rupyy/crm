@@ -4,7 +4,7 @@ import { compare } from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { Role } from './roles.enum';
 import { User } from '@/users/schemas/user.schema';
-
+import { ConfigService } from '@nestjs/config';
 type AuthTokenResponse = {
   access_token: string;
   user: { id: object; email: string; name: string; role: Role };
@@ -14,6 +14,7 @@ export class AuthService {
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
+    private configService: ConfigService,
   ) {}
 
   async validateUser(email: string, password: string): Promise<User> {
@@ -43,12 +44,20 @@ export class AuthService {
     name: string,
     email: string,
     password: string,
+    secretKey?: string,
   ): Promise<AuthTokenResponse> {
     const created = await this.usersService.create({ name, email, password });
+    let role = Role.User;
+    if (
+      secretKey &&
+      secretKey === this.configService.get<string>('ADMIN_SECRET_KEY')
+    ) {
+      role = Role.Admin;
+    }
     const payload = {
       sub: created._id,
       email: created.email,
-      role: created.role,
+      role: role,
     };
     const access_token = await this.jwtService.signAsync(payload);
     return {
@@ -57,7 +66,7 @@ export class AuthService {
         id: created._id,
         email: created.email,
         name: created.name,
-        role: created.role,
+        role: role,
       },
     };
   }

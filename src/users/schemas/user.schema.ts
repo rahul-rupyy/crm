@@ -19,6 +19,9 @@ export class User extends Document {
   @Prop({ required: true })
   passwordHash!: string;
 
+  @Prop()
+  secretKey?: string;
+
   @Prop({ required: true, enum: Object.values(Role), default: Role.User })
   role!: Role;
 }
