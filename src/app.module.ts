@@ -3,37 +3,30 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { HealthController } from './health/health.controller';
 import { TerminusModule } from '@nestjs/terminus';
 import { validate } from './config/env.validation';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { LeadsModule } from './leads/leads.module';
+import { MongooseModule } from '@nestjs/mongoose/dist/mongoose.module';
 @Module({
   imports: [
-    // 10 requests per minute
     ConfigModule.forRoot({
       isGlobal: true,
-      validate, 
+      validate,
     }),
-    TypeOrmModule.forRootAsync({
-      useFactory: (configService: ConfigService) => ({
-        type: 'mysql',
-        // Now using configService.get() ensures type safety
-        host: configService.get<string>('DATABASE_HOST'),
-        port: configService.get<number>('DATABASE_PORT'),
-        username: configService.get<string>('DATABASE_USER'),
-        password: configService.get<string>('DATABASE_PASSWORD'),
-        database: configService.get<string>('DATABASE_NAME'),
-        entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: true,
-      }),
+
+    MongooseModule.forRootAsync({
       inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        uri: configService.getOrThrow<string>('MONGO_URI'),
+      }),
     }),
     ConfigModule.forRoot({
-      isGlobal: true, 
-      validate,       
+      isGlobal: true,
+      validate,
     }),
-   ThrottlerModule.forRootAsync({
+    ThrottlerModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => [
         {
@@ -43,6 +36,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
       ],
     }),
     TerminusModule,
+    LeadsModule,
   ],
 
   controllers: [AppController, HealthController],
