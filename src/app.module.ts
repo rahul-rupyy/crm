@@ -11,6 +11,7 @@ import { LeadsModule } from './leads/leads.module';
 import { MongooseModule } from '@nestjs/mongoose/dist/mongoose.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
+import { NotesModule } from './notes/notes.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -41,6 +42,7 @@ import { UsersModule } from './users/users.module';
     LeadsModule,
     AuthModule,
     UsersModule,
+    NotesModule,
   ],
 
   controllers: [AppController, HealthController],

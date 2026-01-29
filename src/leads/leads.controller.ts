@@ -7,18 +7,21 @@ import {
   Param,
   Delete,
   Headers,
+  Req,
 } from '@nestjs/common';
 import { LeadsService } from './leads.service';
 import { CreateLeadDto } from './dto/create-lead.dto';
 import { UpdateLeadDto } from './dto/update-lead.dto';
-
+import { createNoteDto } from '@/notes/dto/notes.dto';
+import { NotesService } from '@/notes/notes.service';
+import type { RequestWithUser } from '@/types/notes/note';
 @Controller('leads')
 export class LeadsController {
-  constructor(private readonly leadsService: LeadsService) {}
-  @Post('seed')
-  seedData() {
-    return this.leadsService.seed();
-  }
+  constructor(
+    private readonly leadsService: LeadsService,
+    private readonly notesService: NotesService,
+  ) {}
+
   @Post()
   create(
     @Body() createLeadDto: CreateLeadDto,
@@ -45,5 +48,20 @@ export class LeadsController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.leadsService.remove(id);
+  }
+  //Notes Routes
+
+  @Post(':id/notes')
+  createNote(
+    @Param('id') leadId: string,
+    @Body() dto: createNoteDto,
+    @Req() req: RequestWithUser,
+  ) {
+    return this.notesService.create(leadId, dto, req.user.userId);
+  }
+
+  @Get(':id/notes')
+  findNote(@Param('id') leadId: string) {
+    return this.notesService.findByLead(leadId);
   }
 }
