@@ -9,6 +9,8 @@ import { validate } from './config/env.validation';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { LeadsModule } from './leads/leads.module';
 import { MongooseModule } from '@nestjs/mongoose/dist/mongoose.module';
+import { AuthModule } from './auth/auth.module';
+import { UsersModule } from './users/users.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -37,6 +39,8 @@ import { MongooseModule } from '@nestjs/mongoose/dist/mongoose.module';
     }),
     TerminusModule,
     LeadsModule,
+    AuthModule,
+    UsersModule,
   ],
 
   controllers: [AppController, HealthController],

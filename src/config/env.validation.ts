@@ -7,6 +7,7 @@ export const envSchema = z.object({
     .enum(['development', 'production', 'test'])
     .default('development'),
   MONGO_URI: z.string().min(1, 'MONGO_URI is required'),
+  JWT_SECRET: z.string().min(1).default('dev-secret'),
   THROTTLE_TTL: z.coerce.number().default(60000),
   THROTTLE_LIMIT: z.coerce.number().default(100),
 });
