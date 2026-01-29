@@ -1,21 +1,8 @@
+import { LeadSource, LeadStatus } from '@/common/types';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
 
 export type LeadDocument = HydratedDocument<Lead>;
-
-export enum LeadStatus {
-  NEW = 'new',
-  CONTACTED = 'contacted',
-  INTERESTED = 'interested',
-  CONVERTED = 'converted',
-}
-
-export enum LeadSource {
-  WEBSITE = 'website',
-  REFERRAL = 'referral',
-  AD = 'ad',
-  MANUAL = 'manual',
-}
 
 @Schema({ timestamps: true })
 export class Lead {
