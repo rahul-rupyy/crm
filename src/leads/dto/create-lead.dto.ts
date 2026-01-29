@@ -1,11 +1,12 @@
+import { LeadSource, LeadStatus } from '@/common/types';
 import {
   IsEmail,
   IsEnum,
   IsNotEmpty,
   IsOptional,
   IsString,
+  Matches,
 } from 'class-validator';
-import { LeadSource, LeadStatus } from '../schemas/lead.schemas';
 
 export class CreateLeadDto {
   @IsString()
@@ -15,8 +16,9 @@ export class CreateLeadDto {
   @IsEmail()
   email: string;
 
-  @IsString()
   @IsNotEmpty()
+  @IsString()
+  @Matches(/^[0-9]{10}$/, { message: 'Phone number must be exactly 10 digits' })
   phone: string;
 
   @IsEnum(LeadSource)
