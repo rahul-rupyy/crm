@@ -4,6 +4,7 @@ import { LeadsService } from './leads.service';
 import { expect } from 'chai';
 import { CreateLeadDto } from './dto/create-lead.dto';
 import { UpdateLeadDto } from './dto/update-lead.dto';
+import { NotesService } from '@/notes/notes.service';
 
 describe('LeadsController', () => {
   let controller: LeadsController;
@@ -21,6 +22,13 @@ describe('LeadsController', () => {
             findOne: () => ({}),
             update: () => ({}),
             remove: () => ({}),
+          },
+        },
+        {
+          provide: NotesService,
+          useValue: {
+            create: () => ({}),
+            findByLeadId: () => [],
           },
         },
       ],
