@@ -3,12 +3,9 @@ import { UsersService } from '../users/users.service';
 import { compare } from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { Role } from './roles.enum';
+import { AuthTokenResponse } from './types/auth-token';
 import { User } from '@/users/schemas/user.schema';
 import { ConfigService } from '@nestjs/config';
-type AuthTokenResponse = {
-  access_token: string;
-  user: { id: object; email: string; name: string; role: Role };
-};
 @Injectable()
 export class AuthService {
   constructor(
