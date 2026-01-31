@@ -5,6 +5,7 @@ import { expect } from 'chai';
 import { CreateLeadDto } from './dto/create-lead.dto';
 import { UpdateLeadDto } from './dto/update-lead.dto';
 import { NotesService } from '@/notes/notes.service';
+import { JwtUser } from '@/common/types';
 
 describe('LeadsController', () => {
   let controller: LeadsController;
@@ -15,20 +16,20 @@ describe('LeadsController', () => {
       providers: [
         {
           provide: LeadsService,
-
           useValue: {
             create: () => ({}),
             findAll: () => [],
             findOne: () => ({}),
             update: () => ({}),
             remove: () => ({}),
+            getDashboardMetrics: () => ({}),
           },
         },
         {
           provide: NotesService,
           useValue: {
             create: () => ({}),
-            findByLeadId: () => [],
+            findByLead: () => [],
           },
         },
       ],
@@ -43,7 +44,14 @@ describe('LeadsController', () => {
 
   it('should create a lead', () => {
     const dto = {} as CreateLeadDto;
-    expect(controller.create(dto)).to.not.equal(undefined);
+
+    const mockUser: JwtUser = {
+      userId: 'test-user-id',
+      email: 'test@example.com',
+      role: 'user',
+    };
+
+    expect(controller.create(dto, mockUser)).to.not.equal(undefined);
   });
 
   it('should update a lead', () => {

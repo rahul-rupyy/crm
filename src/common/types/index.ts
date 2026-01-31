@@ -16,3 +16,8 @@ export enum LeadSource {
   AD = 'ad',
   MANUAL = 'manual',
 }
+export interface JwtUser {
+  userId: string;
+  email: string;
+  role: string;
+}

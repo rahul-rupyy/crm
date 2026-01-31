@@ -17,7 +17,14 @@ import { CreateLeadDto } from './dto/create-lead.dto';
 import { UpdateLeadDto } from './dto/update-lead.dto';
 import { createNoteDto } from '@/notes/dto/notes.dto';
 import { NotesService } from '@/notes/notes.service';
-import type { RequestWithUser } from '@/types/notes/note';
+import { JwtAuthGuard } from '@/auth/jwt-auth.guard';
+import { RolesGuard } from '@/auth/roles.guard';
+import { Roles } from '@/auth/roles.decorator';
+import { Role } from '@/auth/roles.enum';
+import { type JwtUser } from '@/common/types';
+import { CurrentUser } from '@/common/decorators/current-user.decorator';
+
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('leads')
 export class LeadsController {
   constructor(
@@ -25,12 +32,11 @@ export class LeadsController {
     private readonly notesService: NotesService,
   ) {}
 
+  // --- LEADS ROUTES ---
+
   @Post()
-  create(
-    @Body() createLeadDto: CreateLeadDto,
-    @Headers('x-user-id') userId: string = '507f1f77bcf86cd799439011',
-  ) {
-    return this.leadsService.create(createLeadDto, userId);
+  create(@Body() createLeadDto: CreateLeadDto, @CurrentUser() user: JwtUser) {
+    return this.leadsService.create(createLeadDto, user.userId);
   }
 
   // @Get()
@@ -49,18 +55,20 @@ export class LeadsController {
   }
 
   @Delete(':id')
+  @Roles(Role.Admin)
   remove(@Param('id') id: string) {
     return this.leadsService.remove(id);
   }
-  //Notes Routes
+
+  // --- NOTES ROUTES (Nested) ---
 
   @Post(':id/notes')
   createNote(
     @Param('id') leadId: string,
     @Body() dto: createNoteDto,
-    @Req() req: RequestWithUser,
+    @CurrentUser() user: JwtUser,
   ) {
-    return this.notesService.create(leadId, dto, req.user.userId);
+    return this.notesService.create(leadId, dto, user.userId);
   }
 
   @Get(':id/notes')

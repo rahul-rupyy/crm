@@ -7,6 +7,7 @@ import { WinstonModule } from 'nest-winston';
 import * as winston from 'winston';
 import { utilities as nestWinstonModuleUtilities } from 'nest-winston';
 import { ConfigService } from '@nestjs/config/dist/config.service';
+import { ValidationPipe } from '@nestjs/common/pipes/validation.pipe';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     logger: WinstonModule.createLogger({
@@ -34,6 +35,13 @@ async function bootstrap() {
       ],
     }),
   });
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
   const configService = app.get(ConfigService);
   app.use(helmet());
   app.enableCors({
@@ -41,6 +49,7 @@ async function bootstrap() {
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     Credentials: true,
   });
+  app.setGlobalPrefix('api');
   const config = new DocumentBuilder()
     .setTitle('NestJS Boilerplate API')
     .setDescription('The Boilerplate API description')
