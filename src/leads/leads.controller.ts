@@ -6,9 +6,13 @@ import {
   Patch,
   Param,
   Delete,
-  UseGuards,
+  Headers,
+  Req,
+  Query,
+  ValidationPipe,
 } from '@nestjs/common';
 import { LeadsService } from './leads.service';
+import { FindLeadsQueryDto } from './dto/find-leads-query.dto';
 import { CreateLeadDto } from './dto/create-lead.dto';
 import { UpdateLeadDto } from './dto/update-lead.dto';
 import { createNoteDto } from '@/notes/dto/notes.dto';
@@ -35,10 +39,10 @@ export class LeadsController {
     return this.leadsService.create(createLeadDto, user.userId);
   }
 
-  @Get()
-  findAll() {
-    return this.leadsService.findAll();
-  }
+  // @Get()
+  // findAll() {
+  //   return this.leadsService.findAll();
+  // }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
@@ -70,5 +74,18 @@ export class LeadsController {
   @Get(':id/notes')
   findNote(@Param('id') leadId: string) {
     return this.notesService.findByLead(leadId);
+  }
+
+  // dashboard call
+  @Get('dashboard')
+  getDashboardMetrics() {
+    return this.leadsService.getDashboardMetrics();
+  }
+  // filter
+  @Get()
+  findAll(
+    @Query(new ValidationPipe({ transform: true })) query: FindLeadsQueryDto,
+  ) {
+    return this.leadsService.findAll(query);
   }
 }

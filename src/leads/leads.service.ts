@@ -9,6 +9,7 @@ import { Lead, LeadDocument } from './schemas/lead.schemas';
 import { CreateLeadDto } from './dto/create-lead.dto';
 import { UpdateLeadDto } from './dto/update-lead.dto';
 import { LeadStatus } from '@/common/types';
+import { FindLeadsQueryDto } from './dto/find-leads-query.dto';
 import { faker } from '@faker-js/faker';
 @Injectable()
 export class LeadsService {
@@ -45,9 +46,9 @@ export class LeadsService {
     return newLead.save();
   }
 
-  async findAll(): Promise<Lead[]> {
-    return this.leadModel.find().exec();
-  }
+  // async findAll(): Promise<Lead[]> {
+  //   return this.leadModel.find().exec();
+  // }
 
   async findOne(id: string): Promise<Lead> {
     if (!Types.ObjectId.isValid(id)) {
@@ -99,5 +100,74 @@ export class LeadsService {
         `Invalid status transition. You cannot go from '${currentStatus}' to '${newStatus}'. Allowed: ${allowed.join(', ')}`,
       );
     }
+  }
+  async findAll(query: FindLeadsQueryDto) {
+    const mongoQuery: Record<string, any> = {};
+
+    // Filter
+    if (query.status) {
+      mongoQuery.status = { $in: query.status.split(',') };
+    }
+
+    if (query.source) {
+      mongoQuery.source = { $in: query.source.split(',') };
+    }
+
+    if (query.assignedTo) {
+      mongoQuery.assignedTo = query.assignedTo;
+    }
+
+    // Search
+    if (query.search) {
+      mongoQuery.$or = [
+        { name: { $regex: query.search, $options: 'i' } },
+        { email: { $regex: query.search, $options: 'i' } },
+        { phone: { $regex: query.search, $options: 'i' } },
+      ];
+    }
+
+    return this.leadModel.find(mongoQuery).sort({ createdAt: -1 }).exec();
+  }
+
+  async getDashboardMetrics() {
+    const totalLeads = await this.leadModel.countDocuments();
+
+    const convertedLeads = await this.leadModel.countDocuments({
+      status: LeadStatus.CONVERTED,
+    });
+
+    const assignedLeads = await this.leadModel.countDocuments({
+      assignedTo: { $exists: true, $ne: null },
+    });
+
+    const statusAggregation: Array<{
+      _id: LeadStatus;
+      count: number;
+    }> = await this.leadModel.aggregate([
+      {
+        $group: {
+          _id: '$status',
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    const leadsByStatus: Record<LeadStatus, number> = {
+      [LeadStatus.NEW]: 0,
+      [LeadStatus.CONTACTED]: 0,
+      [LeadStatus.INTERESTED]: 0,
+      [LeadStatus.CONVERTED]: 0,
+    };
+
+    statusAggregation.forEach((item) => {
+      leadsByStatus[item._id] = item.count;
+    });
+
+    return {
+      totalLeads,
+      leadsByStatus,
+      assignedLeads,
+      convertedLeads,
+    };
   }
 }
