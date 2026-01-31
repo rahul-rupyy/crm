@@ -6,6 +6,7 @@ import { Role } from './roles.enum';
 import { AuthTokenResponse } from './types/auth-token';
 import { User } from '@/users/schemas/user.schema';
 import { ConfigService } from '@nestjs/config';
+import { authMessages } from '@/types/auth/auth';
 @Injectable()
 export class AuthService {
   constructor(
@@ -16,9 +17,10 @@ export class AuthService {
 
   async validateUser(email: string, password: string): Promise<User> {
     const user = await this.usersService.findByEmail(email);
-    if (!user) throw new UnauthorizedException('Invalid credentials');
+    if (!user) throw new UnauthorizedException(authMessages.USER_NOT_FOUND);
     const match = await compare(password, user.passwordHash);
-    if (!match) throw new UnauthorizedException('Invalid credentials');
+    if (!match)
+      throw new UnauthorizedException(authMessages.INVALID_CREDENTIALS);
     return user;
   }
 
