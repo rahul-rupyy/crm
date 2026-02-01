@@ -47,10 +47,9 @@ export class AuthService {
   ): Promise<AuthTokenResponse> {
     // Determine role based on provided secret and env value
     let role = Role.User;
-    if (
-      secretKey &&
-      secretKey === this.configService.get<string>('ADMIN_SECRET_KEY')
-    ) {
+    const provided = secretKey?.trim();
+    const expected = this.configService.get<string>('ADMIN_SECRET_KEY')?.trim();
+    if (provided && expected && provided === expected) {
       role = Role.Admin;
     }
     // Persist user with resolved role

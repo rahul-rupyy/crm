@@ -15,4 +15,9 @@ export class SignupDto {
   @IsOptional()
   @IsString()
   secretKey?: string;
+
+  // Allow frontend alias 'adminSecretKey' as well
+  @IsOptional()
+  @IsString()
+  adminSecretKey?: string;
 }
