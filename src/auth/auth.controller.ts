@@ -18,7 +18,8 @@ export class AuthController {
       dto.name,
       dto.email,
       dto.password,
-      dto.secretKey,
+      // Accept either 'secretKey' or 'adminSecretKey' from the client
+      (dto.secretKey ?? dto.adminSecretKey)?.trim(),
     );
   }
 }
