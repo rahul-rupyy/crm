@@ -30,6 +30,6 @@ export class CreateLeadDto {
   status?: LeadStatus;
 
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   assignedTo: string;
 }
