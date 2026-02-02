@@ -21,7 +21,6 @@
     "noImplicitAny": false,
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false,
-    "ignoreDeprecations": "6.0",
     "paths": {
       //This allows you to import files using @modules/auth instead of ../../modules/auth
       "@/*": ["src/*"],

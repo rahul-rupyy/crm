@@ -6,8 +6,7 @@ import {
   Patch,
   Param,
   Delete,
-  Headers,
-  Req,
+  UseGuards,
   Query,
   ValidationPipe,
 } from '@nestjs/common';
@@ -38,11 +37,6 @@ export class LeadsController {
   create(@Body() createLeadDto: CreateLeadDto, @CurrentUser() user: JwtUser) {
     return this.leadsService.create(createLeadDto, user.userId);
   }
-
-  // @Get()
-  // findAll() {
-  //   return this.leadsService.findAll();
-  // }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
