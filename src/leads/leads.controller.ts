@@ -6,9 +6,8 @@ import {
   Patch,
   Param,
   Delete,
-  Headers,
-  Req,
   Query,
+  UseGuards,
   ValidationPipe,
 } from '@nestjs/common';
 import { LeadsService } from './leads.service';
@@ -32,21 +31,30 @@ export class LeadsController {
     private readonly notesService: NotesService,
   ) {}
 
-  // --- LEADS ROUTES ---
+  // 1. STATIC ROUTES (Must be at the top)
+  @Get('dashboard')
+  getDashboardMetrics() {
+    return this.leadsService.getDashboardMetrics();
+  }
+
+  // 2. SEARCH/FILTER ROUTE (The base GET /leads)
+  @Get()
+  findAll(
+    @Query(new ValidationPipe({ transform: true, whitelist: true }))
+    query: FindLeadsQueryDto,
+  ) {
+    return this.leadsService.findAll(query);
+  }
+
+  // 3. PARAMETERIZED ROUTES (Must be after dashboard)
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.leadsService.findOne(id);
+  }
 
   @Post()
   create(@Body() createLeadDto: CreateLeadDto, @CurrentUser() user: JwtUser) {
     return this.leadsService.create(createLeadDto, user.userId);
-  }
-
-  // @Get()
-  // findAll() {
-  //   return this.leadsService.findAll();
-  // }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.leadsService.findOne(id);
   }
 
   @Patch(':id')
@@ -60,8 +68,7 @@ export class LeadsController {
     return this.leadsService.remove(id);
   }
 
-  // --- NOTES ROUTES (Nested) ---
-
+  // --- NESTED NOTES ROUTES ---
   @Post(':id/notes')
   createNote(
     @Param('id') leadId: string,
@@ -74,18 +81,5 @@ export class LeadsController {
   @Get(':id/notes')
   findNote(@Param('id') leadId: string) {
     return this.notesService.findByLead(leadId);
-  }
-
-  // dashboard call
-  @Get('dashboard')
-  getDashboardMetrics() {
-    return this.leadsService.getDashboardMetrics();
-  }
-  // filter
-  @Get()
-  findAll(
-    @Query(new ValidationPipe({ transform: true })) query: FindLeadsQueryDto,
-  ) {
-    return this.leadsService.findAll(query);
   }
 }
