@@ -6,10 +6,11 @@ import {
   Patch,
   Param,
   Delete,
-  Headers,
   Req,
+  Headers,
   Query,
   ValidationPipe,
+  UseGuards,
 } from '@nestjs/common';
 import { LeadsService } from './leads.service';
 import { FindLeadsQueryDto } from './dto/find-leads-query.dto';
@@ -18,6 +19,7 @@ import { UpdateLeadDto } from './dto/update-lead.dto';
 import { createNoteDto } from '@/notes/dto/notes.dto';
 import { NotesService } from '@/notes/notes.service';
 import type { RequestWithUser } from '@/types/notes/note';
+import { AuthGuard } from '@nestjs/passport';
 @Controller('leads')
 export class LeadsController {
   constructor(
@@ -55,12 +57,14 @@ export class LeadsController {
   //Notes Routes
 
   @Post(':id/notes')
+  @UseGuards(AuthGuard('jwt'))
   createNote(
     @Param('id') leadId: string,
     @Body() dto: createNoteDto,
     @Req() req: RequestWithUser,
   ) {
-    return this.notesService.create(leadId, dto, req.user.userId);
+    const uid = req.user.sub;
+    return this.notesService.create(leadId, dto, uid);
   }
 
   @Get(':id/notes')
