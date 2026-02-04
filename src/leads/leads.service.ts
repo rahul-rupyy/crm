@@ -11,13 +11,13 @@ import { UpdateLeadDto } from './dto/update-lead.dto';
 import { LeadStatus } from '@/common/types';
 import { FindLeadsQueryDto } from './dto/find-leads-query.dto';
 import { faker } from '@faker-js/faker';
+
 @Injectable()
 export class LeadsService {
   constructor(@InjectModel(Lead.name) private leadModel: Model<LeadDocument>) {}
 
   async seed() {
     const leads: Partial<Lead>[] = [];
-
     for (let i = 0; i < 50; i++) {
       leads.push({
         name: faker.person.fullName(),
@@ -34,9 +34,9 @@ export class LeadsService {
         createdBy: new Types.ObjectId('507f1f77bcf86cd799439011'),
       });
     }
-
     return this.leadModel.insertMany(leads);
   }
+
   async create(createLeadDto: CreateLeadDto, userId: string): Promise<Lead> {
     const newLead = new this.leadModel({
       ...createLeadDto,
@@ -46,15 +46,41 @@ export class LeadsService {
     return newLead.save();
   }
 
-  // async findAll(): Promise<Lead[]> {
-  //   return this.leadModel.find().exec();
-  // }
+  async findAll(query: FindLeadsQueryDto) {
+    const mongoQuery: Record<string, any> = {};
+
+    // Filter by status (comma separated string to array)
+    if (query.status) {
+      mongoQuery.status = { $in: query.status.split(',') };
+    }
+
+    // Filter by source
+    if (query.source) {
+      mongoQuery.source = { $in: query.source.split(',') };
+    }
+
+    // Filter by assignedTo (Crucial: Convert string to ObjectId)
+    if (query.assignedTo && Types.ObjectId.isValid(query.assignedTo)) {
+      mongoQuery.assignedTo = new Types.ObjectId(query.assignedTo);
+    }
+
+    // Search Logic
+    if (query.search) {
+      const searchRegex = new RegExp(query.search, 'i');
+      mongoQuery.$or = [
+        { name: searchRegex },
+        { email: searchRegex },
+        { phone: searchRegex },
+      ];
+    }
+
+    return this.leadModel.find(mongoQuery).sort({ createdAt: -1 }).exec();
+  }
 
   async findOne(id: string): Promise<Lead> {
     if (!Types.ObjectId.isValid(id)) {
       throw new BadRequestException('Invalid Lead ID');
     }
-
     const lead = await this.leadModel.findById(id).exec();
     if (!lead) throw new NotFoundException(`Lead #${id} not found`);
     return lead;
@@ -64,11 +90,9 @@ export class LeadsService {
     if (updateLeadDto.status) {
       await this.checkStatusTransition(id, updateLeadDto.status);
     }
-
     const updatedLead = await this.leadModel
       .findByIdAndUpdate(id, updateLeadDto, { new: true })
       .exec();
-
     if (!updatedLead) throw new NotFoundException(`Lead #${id} not found`);
     return updatedLead;
   }
@@ -79,78 +103,18 @@ export class LeadsService {
     return deletedLead;
   }
 
-  private async checkStatusTransition(
-    id: string,
-    newStatus: LeadStatus,
-  ): Promise<void> {
-    const lead = await this.findOne(id);
-    const currentStatus = lead.status as LeadStatus;
-
-    const validTransitions: Record<LeadStatus, LeadStatus[]> = {
-      [LeadStatus.NEW]: [LeadStatus.NEW, LeadStatus.CONTACTED],
-      [LeadStatus.CONTACTED]: [LeadStatus.CONTACTED, LeadStatus.INTERESTED],
-      [LeadStatus.INTERESTED]: [LeadStatus.INTERESTED, LeadStatus.CONVERTED],
-      [LeadStatus.CONVERTED]: [LeadStatus.CONVERTED],
-    };
-
-    const allowed = validTransitions[currentStatus];
-
-    if (!allowed.includes(newStatus)) {
-      throw new BadRequestException(
-        `Invalid status transition. You cannot go from '${currentStatus}' to '${newStatus}'. Allowed: ${allowed.join(', ')}`,
-      );
-    }
-  }
-  async findAll(query: FindLeadsQueryDto) {
-    const mongoQuery: Record<string, any> = {};
-
-    // Filter
-    if (query.status) {
-      mongoQuery.status = { $in: query.status.split(',') };
-    }
-
-    if (query.source) {
-      mongoQuery.source = { $in: query.source.split(',') };
-    }
-
-    if (query.assignedTo) {
-      mongoQuery.assignedTo = query.assignedTo;
-    }
-
-    // Search
-    if (query.search) {
-      mongoQuery.$or = [
-        { name: { $regex: query.search, $options: 'i' } },
-        { email: { $regex: query.search, $options: 'i' } },
-        { phone: { $regex: query.search, $options: 'i' } },
-      ];
-    }
-
-    return this.leadModel.find(mongoQuery).sort({ createdAt: -1 }).exec();
-  }
-
   async getDashboardMetrics() {
-    const totalLeads = await this.leadModel.countDocuments();
-
-    const convertedLeads = await this.leadModel.countDocuments({
-      status: LeadStatus.CONVERTED,
-    });
-
-    const assignedLeads = await this.leadModel.countDocuments({
-      assignedTo: { $exists: true, $ne: null },
-    });
-
-    const statusAggregation: Array<{
-      _id: LeadStatus;
-      count: number;
-    }> = await this.leadModel.aggregate([
-      {
-        $group: {
-          _id: '$status',
-          count: { $sum: 1 },
-        },
-      },
-    ]);
+    const [totalLeads, convertedLeads, assignedLeads, statusAggregation] =
+      await Promise.all([
+        this.leadModel.countDocuments(),
+        this.leadModel.countDocuments({ status: LeadStatus.CONVERTED }),
+        this.leadModel.countDocuments({
+          assignedTo: { $exists: true, $ne: null },
+        }),
+        this.leadModel.aggregate<{ _id: LeadStatus | null; count: number }>([
+          { $group: { _id: '$status', count: { $sum: 1 } } },
+        ]),
+      ]);
 
     const leadsByStatus: Record<LeadStatus, number> = {
       [LeadStatus.NEW]: 0,
@@ -159,15 +123,31 @@ export class LeadsService {
       [LeadStatus.CONVERTED]: 0,
     };
 
-    statusAggregation.forEach((item) => {
-      leadsByStatus[item._id] = item.count;
-    });
+    for (const item of statusAggregation) {
+      if (item._id && Object.values(LeadStatus).includes(item._id)) {
+        leadsByStatus[item._id] = item.count;
+      }
+    }
 
-    return {
-      totalLeads,
-      leadsByStatus,
-      assignedLeads,
-      convertedLeads,
+    return { totalLeads, leadsByStatus, assignedLeads, convertedLeads };
+  }
+
+  private async checkStatusTransition(
+    id: string,
+    newStatus: LeadStatus,
+  ): Promise<void> {
+    const lead = await this.findOne(id);
+    const currentStatus = lead.status as LeadStatus;
+    const validTransitions: Record<LeadStatus, LeadStatus[]> = {
+      [LeadStatus.NEW]: [LeadStatus.NEW, LeadStatus.CONTACTED],
+      [LeadStatus.CONTACTED]: [LeadStatus.CONTACTED, LeadStatus.INTERESTED],
+      [LeadStatus.INTERESTED]: [LeadStatus.INTERESTED, LeadStatus.CONVERTED],
+      [LeadStatus.CONVERTED]: [LeadStatus.CONVERTED],
     };
+    if (!validTransitions[currentStatus]?.includes(newStatus)) {
+      throw new BadRequestException(
+        `Invalid transition from ${currentStatus} to ${newStatus}`,
+      );
+    }
   }
 }
