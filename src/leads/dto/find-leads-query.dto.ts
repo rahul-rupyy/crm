@@ -2,7 +2,6 @@ import { IsOptional, IsString, IsInt, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class FindLeadsQueryDto {
-  // --- Pagination ---
   @IsOptional()
   @Type(() => Number)
   @IsInt()

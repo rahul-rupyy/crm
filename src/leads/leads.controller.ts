@@ -6,8 +6,8 @@ import {
   Patch,
   Param,
   Delete,
-  UseGuards,
   Query,
+  UseGuards,
   ValidationPipe,
 } from '@nestjs/common';
 import { LeadsService } from './leads.service';
@@ -23,24 +23,40 @@ import { Role } from '@/auth/roles.enum';
 import { type JwtUser } from '@/common/types';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 
-@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('leads')
 export class LeadsController {
   constructor(
     private readonly leadsService: LeadsService,
     private readonly notesService: NotesService,
   ) {}
+  @Get('seed')
+  async seed() {
+    return this.leadsService.seed();
+  }
+  @UseGuards(JwtAuthGuard, RolesGuard) // 1. STATIC ROUTES (Must be at the top)
+  @Get('dashboard')
+  getDashboardMetrics() {
+    return this.leadsService.getDashboardMetrics();
+  }
 
-  // --- LEADS ROUTES ---
+  // 2. SEARCH/FILTER ROUTE (The base GET /leads)
+  @Get()
+  findAll(
+    @Query(new ValidationPipe({ transform: true, whitelist: true }))
+    query: FindLeadsQueryDto,
+  ) {
+    return this.leadsService.findAll(query);
+  }
+
+  // 3. PARAMETERIZED ROUTES (Must be after dashboard)
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.leadsService.findOne(id);
+  }
 
   @Post()
   create(@Body() createLeadDto: CreateLeadDto, @CurrentUser() user: JwtUser) {
     return this.leadsService.create(createLeadDto, user.userId);
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.leadsService.findOne(id);
   }
 
   @Patch(':id')
@@ -54,8 +70,7 @@ export class LeadsController {
     return this.leadsService.remove(id);
   }
 
-  // --- NOTES ROUTES (Nested) ---
-
+  // --- NESTED NOTES ROUTES ---
   @Post(':id/notes')
   createNote(
     @Param('id') leadId: string,
@@ -68,18 +83,5 @@ export class LeadsController {
   @Get(':id/notes')
   findNote(@Param('id') leadId: string) {
     return this.notesService.findByLead(leadId);
-  }
-
-  // dashboard call
-  @Get('dashboard')
-  getDashboardMetrics() {
-    return this.leadsService.getDashboardMetrics();
-  }
-  // filter
-  @Get()
-  findAll(
-    @Query(new ValidationPipe({ transform: true })) query: FindLeadsQueryDto,
-  ) {
-    return this.leadsService.findAll(query);
   }
 }
