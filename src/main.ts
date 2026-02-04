@@ -62,6 +62,6 @@ async function bootstrap() {
   const port = configService.get<number>('PORT')!;
   app.useGlobalInterceptors(new TransformInterceptor());
   await app.listen(port);
-  console.log('husky test');
+  console.log(`Application is running on: http://localhost:${port}/api`);
 }
 void bootstrap();
