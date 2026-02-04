@@ -1,6 +1,23 @@
-import { IsOptional, IsString, IsNumberString } from 'class-validator';
+import { IsOptional, IsString, IsInt, Min } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class FindLeadsQueryDto {
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  limit?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  skip?: number;
+
+  @IsOptional()
+  @IsString()
+  search?: string;
+
   @IsOptional()
   @IsString()
   status?: string;
@@ -12,12 +29,4 @@ export class FindLeadsQueryDto {
   @IsOptional()
   @IsString()
   assignedTo?: string;
-
-  @IsOptional()
-  @IsString()
-  search?: string;
-
-  @IsOptional()
-  @IsNumberString() // Add this to allow the limit parameter
-  limit?: string;
 }
