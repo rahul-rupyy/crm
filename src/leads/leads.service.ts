@@ -104,18 +104,17 @@ export class LeadsService {
   }
 
   async getDashboardMetrics() {
-    const totalLeads = await this.leadModel.countDocuments();
-    const convertedLeads = await this.leadModel.countDocuments({
-      status: LeadStatus.CONVERTED,
-    });
-    const assignedLeads = await this.leadModel.countDocuments({
-      assignedTo: { $exists: true, $ne: null },
-    });
-
-    const statusAggregation = await this.leadModel.aggregate<{
-      _id: LeadStatus | null;
-      count: number;
-    }>([{ $group: { _id: '$status', count: { $sum: 1 } } }]);
+    const [totalLeads, convertedLeads, assignedLeads, statusAggregation] =
+      await Promise.all([
+        this.leadModel.countDocuments(),
+        this.leadModel.countDocuments({ status: LeadStatus.CONVERTED }),
+        this.leadModel.countDocuments({
+          assignedTo: { $exists: true, $ne: null },
+        }),
+        this.leadModel.aggregate<{ _id: LeadStatus | null; count: number }>([
+          { $group: { _id: '$status', count: { $sum: 1 } } },
+        ]),
+      ]);
 
     const leadsByStatus: Record<LeadStatus, number> = {
       [LeadStatus.NEW]: 0,
@@ -124,9 +123,11 @@ export class LeadsService {
       [LeadStatus.CONVERTED]: 0,
     };
 
-    statusAggregation.forEach((item) => {
-      if (item._id) leadsByStatus[item._id] = item.count;
-    });
+    for (const item of statusAggregation) {
+      if (item._id && Object.values(LeadStatus).includes(item._id)) {
+        leadsByStatus[item._id] = item.count;
+      }
+    }
 
     return { totalLeads, leadsByStatus, assignedLeads, convertedLeads };
   }

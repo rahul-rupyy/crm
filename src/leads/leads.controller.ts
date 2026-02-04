@@ -23,15 +23,17 @@ import { Role } from '@/auth/roles.enum';
 import { type JwtUser } from '@/common/types';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 
-@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('leads')
 export class LeadsController {
   constructor(
     private readonly leadsService: LeadsService,
     private readonly notesService: NotesService,
   ) {}
-
-  // 1. STATIC ROUTES (Must be at the top)
+  @Get('seed')
+  async seed() {
+    return this.leadsService.seed();
+  }
+  @UseGuards(JwtAuthGuard, RolesGuard) // 1. STATIC ROUTES (Must be at the top)
   @Get('dashboard')
   getDashboardMetrics() {
     return this.leadsService.getDashboardMetrics();

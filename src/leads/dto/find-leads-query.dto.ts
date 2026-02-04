@@ -1,4 +1,4 @@
-import { IsOptional, IsString } from 'class-validator';
+import { IsOptional, IsString, IsNumberString } from 'class-validator';
 
 export class FindLeadsQueryDto {
   @IsOptional()
@@ -16,4 +16,8 @@ export class FindLeadsQueryDto {
   @IsOptional()
   @IsString()
   search?: string;
+
+  @IsOptional()
+  @IsNumberString() // Add this to allow the limit parameter
+  limit?: string;
 }
