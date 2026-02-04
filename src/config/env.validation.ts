@@ -6,13 +6,9 @@ export const envSchema = z.object({
   NODE_ENV: z
     .enum(['development', 'production', 'test'])
     .default('development'),
-  DATABASE_HOST: z.string().min(1),
-  DATABASE_PORT: z.coerce.number().default(3306),
-  DATABASE_USER: z.string().min(1),
-  DATABASE_PASSWORD: z.string().min(1),
-  DATABASE_NAME: z.string().min(1),
-  DATABASE_URL: z.string().url(),
-  JWT_SECRET: z.string().min(1),
+  MONGO_URI: z.string().min(1, 'MONGO_URI is required'),
+  JWT_SECRET: z.string().min(1).default('dev-secret'),
+  ADMIN_SECRET_KEY: z.string().min(1).default('admin-dev-secret'),
   THROTTLE_TTL: z.coerce.number().default(60000),
   THROTTLE_LIMIT: z.coerce.number().default(100),
 });

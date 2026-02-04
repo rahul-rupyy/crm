@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { HealthController } from './health.controller';
-import { HealthCheckService, TypeOrmHealthIndicator } from '@nestjs/terminus';
+import { HealthCheckService, MongooseHealthIndicator } from '@nestjs/terminus';
 import { expect } from 'chai';
 describe('HealthController', () => {
   let controller: HealthController;
@@ -12,13 +12,13 @@ describe('HealthController', () => {
         {
           provide: HealthCheckService,
           useValue: {
-            check: () => Promise.resolve({}),
+            check: () => Promise.resolve({ status: 'ok' }),
           },
         },
         {
-          provide: TypeOrmHealthIndicator,
+          provide: MongooseHealthIndicator,
           useValue: {
-            pingCheck: () => Promise.resolve({}),
+            pingCheck: () => Promise.resolve({ mongodb: { status: 'up' } }),
           },
         },
       ],
