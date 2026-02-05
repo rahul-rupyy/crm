@@ -12,6 +12,13 @@ export class NotesService {
   ) {}
 
   async create(leadId: string, dto: createNoteDto, userId: string) {
+    const note = await this.NoteModel.create({
+      leadId: new Types.ObjectId(leadId),
+      text: dto.text,
+      createdBy: new Types.ObjectId(userId),
+    });
+    await note.populate('createdBy', 'name email');
+    return note;
     return this.NoteModel.create({
       leadId: new Types.ObjectId(leadId),
       text: dto.text,

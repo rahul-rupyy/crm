@@ -55,6 +55,7 @@ export class LeadsController {
   }
 
   @Post()
+  @UseGuards(JwtAuthGuard, RolesGuard)
   create(@Body() createLeadDto: CreateLeadDto, @CurrentUser() user: JwtUser) {
     return this.leadsService.create(createLeadDto, user.userId);
   }
@@ -72,6 +73,7 @@ export class LeadsController {
 
   // --- NESTED NOTES ROUTES ---
   @Post(':id/notes')
+  @UseGuards(JwtAuthGuard, RolesGuard)
   createNote(
     @Param('id') leadId: string,
     @Body() dto: createNoteDto,
